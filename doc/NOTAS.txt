@@ -1,0 +1,285 @@
+
+ - build_by_text usa tokenize para extraer los features.
+ - en build_by_features se hashean los features y se suman los pesos?
+ 
+ - SimHash para 1000000 de ratings pareciera que con k=3 solo da near duplicates, para k=16 da mas items pero con baja precision.
+ 
+ - Online Machine Learning, Streaming Machine Learning
+ 	http://jubat.us/en/
+ 
+ MINHASH
+ http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.80.4329&rep=rep1&type=pdf
+ 
+ Google News Personalization: Scalable Online Collaborative Filtering 
+ http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.80.4329&rep=rep1&type=pdf
+ 
+Proba rankings (https://code.google.com/p/google-app-engine-ranklist/) para computar MinHash
+
+En vez que considerara "same cluster" si tienen el mismo índice:
+
+""The basic idea in the Min-Hashing scheme is to randomly
+permute the set of items (S) and for each user ui compute
+its hash value h(ui ) as the index of the first item under the
+permutation that belongs to the user’s item set Cui.""
+
+Consideramos que son "same cluster" si los usuarios comparten el mismo primer item
+consumido para un orden random de items (permutacion de items).
+
+De esta forma cuando se agrega un nuevo item no hace falta recomputar todo
+sino que solamente es necesario reubicar a lo sumo un usuario por evento 
+de consumo (userid,itemid). Solo puede pasar que el usuario que consumio
+el nuevo item se vaya al nuevo cluster conformado por el random hash del 
+nuevo item.
+
+Para seed0 (permutacion 0)
+
+index0, ReverseRandomHash:
+ItemId -> ItemRandomHash 
+
+index1, UserAllItems:
+UserId -> ItemRandomHash
+
+index2, MinimumItemRandomHash: 
+ItemRandomHash -> JoinedUserIds
+
+index3, UserClusterHash:
+UserId -> ItemRandomHash
+
+
+??? usar ItemRandomHash -> UserIds (NO IMPORTA EL RANKING????)
+
+Para tener clusters mas pequeños (mejorar la precision) se usan
+concatenaciones de p simhashes usar los primeros p items de cada user.
+Las colisiones clusters se estiman tienen similar Jaccard index.
+Para mejorar el recall hay un parametro  q que es 
+ repetir el proceso con q diferentes permutaciones (seed1..q).
+ Para varias permutaciones (q) se toma para un usuario U como cluster final la unión.
+ de cada clusters C_i donde esta el usuario U.
+ 
+ItemRandomHash es el Scoring para el ranking. Maybe no hace falta el ranking.
+
+def add_event(userid, itemid):
+	randomhashitem = randomhash(itemid)
+	new_item = if not randomhashitem in ReverseRandomHash 
+	if new_item:
+		add(ReverseRandomHash, randomhashitem, itemid)
+		add(MinimumItemRandomHash, randomhashitem, EmptyJoinedCluster([]) )
+	user_min_item = get(UserAllItems, top=1, reverse=True) # reversed top 1 is min
+	add(UserAllItems, userid, randomhashitem)
+	if user_min_item < randomhashitem:
+		nothing
+	else:
+		new_user_min_item = randomhashitem
+		# remove 
+		old_joinedusercluster = get(MinimumItemRandomHash, user_min_item)
+		remove_user( old_joinedusercluster, userid)
+		put(MinimumItemRandomHash, old_joinedusercluster) 
+		# add
+		new_joinedusercluster = get(MinimumItemRandomHash, new_user_min_item)
+		add_user( new_joinedusercluster, userid)
+		put(MinimumItemRandomHash, new_user_min_item, new_joinedusercluster)
+		update(UserClusterHash, userid, new_user_min_item)  
+
+
+def get_n_neighbors( userid, n ):
+		user_min_item = get(UserClusterHash, userid)
+		joinedusercluster = get(MinimumItemRandomHash, user_min_item)
+		joinedusercluster = remove(joinedusercluster, userid)
+		for each similar_user in joinedusercluster:
+			# Paralelizable, limit cluster users to 20 or 30 users.
+			# Caché distances.
+			similarities.append( similarity(userid, similar_user), similar_user )
+		top_similar = max(n, similarities)
+		return top_similar 
+		
+def similarity( userA, userB):
+
+	# set or bags? (seems sets is enough)
+	intersecting_items = intersection( UserAllItems, userA, userB )
+	union_items = union( UserAllItems, userA, userB )
+	return len(intersecting_items) / len(union_items)
+	
+
+
+---------------------------------
+		
+CON Q PARA HIGH PRECISION ItemRandomHash es el Scoring para el ranking. Maybe no hace falta el ranking.
+
+Para seed0 (permutacion 0)
+
+index0, ReverseRandomHash:
+ItemId -> ItemRandomHash 
+
+index1, UserAllItems:
+UserId -> ItemRandomHash
+
+index2, MinimumItemRandomHash: 
+ItemRandomHashJoinedQTuple -> JoinedUserIds
+
+index3, UserClusterHash:
+UserId -> ItemRandomHashJoinedQTuple
+
+
+def add_event(userid, itemid):
+	q = EnvironParams(q)
+	randomhashitem = randomhash(itemid)
+	new_item = if not randomhashitem in ReverseRandomHash 
+	if new_item:
+		add(ReverseRandomHash, randomhashitem, itemid)
+		add(MinimumItemRandomHash, randomhashitem, EmptyJoinedCluster([]) )
+	user_min_q_items = get(UserAllItems, top=q, reverse=True) reversed top q are minimun q items
+	add(UserAllItems, userid, randomhashitem)
+	if len(user_min_q_items) < q-1:
+		nothing 
+	elif user_min_q_items[-1] <= randomhashitem:
+		nothing
+	else:
+		new_user_in_min_q_items = randomhashitem
+		old_user_in_min_q_items = user_min_q_items 
+		user_min_q_items.append( new_user_in_min_q_items )
+		sort( user_min_q_items )
+		user_min_q_items = user_min_q_items[:-1] # remove one
+		joined_new_user_min_q_items = join( user_min_q_items )
+		joined_old_user_min_q_items = join( old_user_min_q_items )
+		# remove old if len already q 
+		if len(old_user_in_min_q_items) == q:
+			old_joinedusercluster = get(MinimumItemRandomHash, joined_old_user_min_q_items)
+			remove_user( old_joinedusercluster, userid)
+			put(MinimumItemRandomHash, old_joinedusercluster) 
+		# add, get return empty if not exists in index
+		new_joinedusercluster = get(MinimumItemRandomHash, joined_new_user_min_q_items)
+		add_user( new_joinedusercluster, userid)
+		put(MinimumItemRandomHash, new_user_in_min_q_items, new_joinedusercluster) 
+		update(UserClusterHash, userid, new_user_in_min_q_items)
+
+
+def get_n_neighbors( userid, n ):
+		user_min_q_items = get(UserClusterHash, userid)
+		if not user_min_q_items:
+			raise Exception( 'Not enough user events!!!')  
+		joinedusercluster = get(MinimumItemRandomHash, user_min_q_items)
+		joinedusercluster = remove(joinedusercluster, userid)
+		for each similar_user in joinedusercluster:
+			# Paralelizable, limit cluster users to 20 or 30 users.
+			# Caché distances.
+			similarities.append( similarity(userid, similar_user), similar_user )
+		top_similar = max(n, similarities)
+		return top_similar 
+		 
+
+SETS VERSUS MULTISETS/BAGS
+
+El método Minhash básico es para sets, para que funcione para multiset habría que enumeror las
+repeticiones de forma de que si el item x esta dos veces en el set s, se guarda <x,1> y <x,2> 
+donde <.,.> es una codificaciones biyectiva de ZxZ en Z.
+
+Jaccard sim for multisets: min and max # for each element for each set.
+
+A = { aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabc } 		 
+B = { aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabc }
+C = { aabc }
+
+D = {aabbccdd}
+E = {abcd}
+
+4 / 8 = 1/2
+
+hash D as D' = { (a,1),(a,2),(b,1),(b,2),(c,1),(c,2),(d,1),(d,2), }
+
+Para Dave:
+
+Dave, tengo un problema matématico para vos:
+
+INTRODUCCIÓN:
+Para conjuntos A y B la definición de similaridad de Jaccard es:
+
+J(A,B) = | A interseccion B | / | A union B |
+
+y esta similaridad para conjuntos grandes se puede estimar  
+hasheando (mezclando) los items y tomando el mínimo para cada conjunto.
+Esta operación de hasheo o mezcla se repite p veces y si dan los mismos minimos
+para cada p_i i en 1..p
+para ambos se estima J'(A,B) = #{minhash(A,p_i)=minhash(B,p_i) para p_i en 1..p}  / p
+es decir para estimar J con un delta de 1/10 se toma p=10.
+Este algoritmo se conoce como Minhash para estimar Jaccard similarity.
+
+PROBLEMA:
+Ahora el problemita es para multisets (bags), conjuntos con repeticiones.
+
+Hay una definición de Jaccard para bags, pero no me gusta pq 
+me parece que no permite hacer un Minhash para bags.
+
+Def1
+" If ratings are 1-to-5-stars, put a movie in a customer’s set n times if
+they rated the movie n-stars. Then, use Jaccard similarity for bags when
+measuring the similarity of customers. The Jaccard similarity for bags
+B and C is deﬁned by counting an element n times in the intersection if
+n is the MINIMUM of the number of times the element appears in B and
+C. In the union, we count the element the SUM of the number of times it
+appears in B and in C."
+http://infolab.stanford.edu/~ullman/mmds/ch3.pdf
+
+Como verás esa definición despide un olor extraño
+matemáticamente hablando pq no es simétrica, 
+usa minimo para "interseccion" de bags pero
+la  suma para la "union".
+
+Mi sospecha es que hay que tomar "MAXIMUM of the number of times it
+appears in B and in C" para la "union" para que el siguiente algoritmo de 
+Minhash adaptado a bags funcione (Def2). 
+
+El Minhash ahora es igual que el anterior pero las repeticiones las numeramos antes de hashear.
+Si no las numeramos tenemos que las repeticiones no cuentan los hashes nos mezclan por bloque de items iguales
+y da lo mismo que para conjuntos llanos.
+
+A = { aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabc } 		 
+B = { aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabc }
+C = { aabc }
+los unicos posibles hashes de A son:
+A1 = { aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabc }
+A2 = { baaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaac }
+A3 = { bcaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa }
+no sirve así.
+
+Entonces si tenemos:
+
+D = {aabbccdd}
+E = {abcd}
+
+numeramos y hasheamos/mezclamos lo siguiente que es mejor.
+
+D' = { (a,1),(a,2),(b,1),(b,2),(c,1),(c,2),(d,1),(d,2), }
+E' = { (a,1),(b,1),(c,1),(d,1), }
+
+Ahora cuando hasheamos muchas veces la estimacion da la estimacion J'(D,E) ~= 1/2
+que es la similaridad según mi definicion DEF2. Distinto de lo que da para DEF1:
+
+4 / 12 = 1/3 para DEF1 
+ 
+¿Qué te parece?
+
+
+------------------
+MINHASH EVALUATION
+------------------
+
+MinHash: In the training phase, each user is clustered
+into 100 clusters based on her clicks. In the test phase, the
+inferred weight of a user u for an item s is computed as
+Sum_ui w(u, ui )I(ui ,s) , where the sum is over all other users
+ui , the function w(u, ui ) is the similarity between two users
+u, ui (proportional to the number of MinHash clusters they
+are together in, normalized to sum to 1 over all users for the
+given user u), and the indicator function I(ui ,s) is 1 if the
+user ui has clicked on the item s and 0 otherwise.
+
+In all of the algorithms described above, the inferred rat-
+ing is a fraction between 0 and 1 that is binarized to 1 if
+it exceeds a certain threshold, 0 otherwise. The threshold
+is chosen from the set {10−x |x ∈ {0.1, 0.2, . . . , 4}}. Vary-
+ing the threshold gives a precision vs. recall trade-off – the
+higher the threshold, higher the precision and the lower the
+recall.
+
+
+

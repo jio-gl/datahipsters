@@ -1,0 +1,447 @@
+
+import random
+import unittest
+import sys
+import time
+import urllib2
+
+import logging
+
+from model import *
+from data import movie_test
+#movie_test = ''
+
+#logging.getLogger().setLevel(logging.DEBUG)
+
+class TestMinHash(unittest.TestCase):
+    
+    _app = 'datahipsters'
+
+    def setUp(self):
+        self.p = 1 # for basic tests  # range 2 to 4
+        self.q = 10 # for basic tests # range 10 to 20
+        self.obj = MinHash(p=self.p,q=self.q)
+        random.seed(777)        
+    
+        self.SETUP = True
+        self.RESET = True
+        self.RESET_SEEDS = True
+        self.limit = -1 #3600 * 10
+        self.train, self.test = [],[]
+        
+        if self.SETUP:
+            #self.obj.init_permutations_seeds()
+            self.__big_setup(self.RESET)
+        else:
+            self.obj.get_seeds()
+
+
+    
+
+    def __build_train_test(self):
+        c = 0
+        limit = self.limit
+        indata = movie_test.split('\n')[:limit+1]
+        self.train = {}
+        self.test = {}        
+        for l in indata:
+            l_s = l.split()
+            if len(l_s) == 0:
+                continue
+            userid = int(l_s[0])
+            movieid = int(l_s[1])
+            
+            c+=1
+            
+            if not userid in self.train:
+                self.train[userid] = []
+                self.test[userid] = []
+            if False: #c % 5 == 0:                
+                self.test[userid].append( movieid )
+            else:
+                self.train[userid].append( movieid )
+        
+
+    def __reset(self, reset_seeds=True):
+        random.seed(777)
+        self.obj.reset(reset_seeds=reset_seeds)
+        
+
+    def __big_setup(self, reset=False):
+
+        if reset:
+            self.__reset(reset_seeds=self.RESET_SEEDS)
+
+        self.obj.get_seeds()
+        
+        self.__build_train_test()
+                
+        c = 0
+        info_module = 1
+        for userid in sorted(self.train.keys()):
+            for movieid in self.train[userid]:
+
+                c += 1
+                if c % info_module == 0:
+                    logging.info("TRAINING: add_to_user(%d,%d) #%d | %s" % (userid,movieid,c,time.ctime()))
+        
+                self.obj.add_to_set(userid, movieid)
+
+
+#    def test_joined_cluster(self):
+#        # make sure the shuffled sequence does not lose any elements
+#        joinedsetcluster = ''
+#        joinedsetcluster = self.obj._add_to_joined_cluster(joinedsetcluster, 666)
+#        self.assertEqual(joinedsetcluster, '666' )
+#        joinedsetcluster = self.obj._add_to_joined_cluster(joinedsetcluster, 777)
+#        self.assertEqual(joinedsetcluster, '666'+self.obj._USER_SEP+'777' )
+#
+#        joinedsetcluster2 = joinedsetcluster
+#        joinedsetcluster3 = joinedsetcluster
+#        joinedsetcluster = self.obj._remove_from_joined_cluster(joinedsetcluster, 666)
+#        self.assertEqual(joinedsetcluster, '777' )
+#        joinedsetcluster2 = self.obj._remove_from_joined_cluster(joinedsetcluster2, 777)
+#        self.assertEqual(joinedsetcluster2, '666' )        
+#        
+#        self.assertRaises(SetIdNotInCluster, self.obj._remove_from_joined_cluster, joinedsetcluster3, '888')
+#
+#
+#    def test_joined_multiset(self):
+#        # make sure the shuffled sequence does not lose any elements
+#        joinedsetcluster = self.obj._EMPTY_SET
+#        joinedsetcluster = self.obj._add_all_from_multiset('111', joinedsetcluster, '666|777|888')
+#        self.assertEqual(joinedsetcluster, '888:1|777:1|666:1' )
+#        joinedsetcluster = self.obj._add_all_from_multiset('111', joinedsetcluster, '999|888|666')
+#        self.assertEqual(joinedsetcluster, '888:2|666:2|999:1|777:1' )
+#        joinedsetcluster = self.obj._remove_all_from_multiset(joinedsetcluster, '999|888|666')
+#        self.assertEqual(joinedsetcluster, '888:1|777:1|666:1' )
+#        joinedsetcluster = self.obj._remove_all_from_multiset(joinedsetcluster, '666|777|888')
+#        self.assertEqual(joinedsetcluster, self.obj._EMPTY_SET )
+
+
+#    def test_seeds(self):        
+#
+#        self.assertEqual( len(self.obj._seeds), self.q )
+#        self.assertEqual( len(self.obj._seeds[self.q-1]), self.p )
+#        self.assertEqual( self.obj._seeds[0][0], 2293340895015308 )
+#        
+#        p_tuple = self.obj._random_hash_p_tuple(1234, self.q-1)
+#        self.assertEqual( p_tuple, ['d72d4591c590553d'] )
+#        self.assertEqual( self.obj._ITEM_HASH_SEP.join( p_tuple ), 'd72d4591c590553d' )
+#        self.assertEqual( len(self.obj._ITEM_HASH_SEP.join( p_tuple ).split(self.obj._ITEM_HASH_SEP)[0]), 16 )
+#        
+#   
+     
+#    def test_get_n_neighbors(self):
+#        
+#        self.__reset()
+#        
+#        setid = 777
+#        elemid = 123
+#        elemid2 = 345
+#        elemid3 = 456
+#        self.obj.add_to_set(setid, elemid)
+#        self.obj.add_to_set(setid, elemid2)
+#        self.obj.add_to_set(setid, elemid3)
+#
+#        setid = 888
+#        elemid = 123
+#        elemid2 = 345
+#        elemid3 = 456
+#        self.obj.add_to_set(setid, elemid)
+#        self.obj.add_to_set(setid, elemid2)
+#        self.obj.add_to_set(setid, elemid3)
+#        
+#        t1 = time.time()        
+#        neighbors = self.obj.get_n_neighbors(777)
+#        t2 = time.time()
+#        logging.info("get_n_neighbors: %f secs" % ( t2-t1 ) )        
+#        
+#        self.assertEqual( neighbors[0][1], 888 )
+
+        
+    def test_get_n_neighbors_fast(self):
+        
+        self.__reset()
+        
+        setid = 777
+        elemid = 123
+        elemid2 = 345
+        elemid3 = 456
+        self.obj.add_to_set(setid, elemid)
+        self.obj.add_to_set(setid, elemid2)
+        self.obj.add_to_set(setid, elemid3)
+
+        setid = 888
+        elemid = 123
+        elemid2 = 345
+        elemid3 = 456
+        self.obj.add_to_set(setid, elemid)
+        self.obj.add_to_set(setid, elemid2)
+        self.obj.add_to_set(setid, elemid3)
+        
+        t1 = time.time()        
+        neighbors = self.obj.get_n_neighbors_fast(777)
+        t2 = time.time()
+        logging.info("get_n_neighbors_fast: %f secs" % ( t2-t1 ) )        
+        
+        self.assertEqual( neighbors[0][1], 888 )
+
+        
+#    def test_get_n_neighbors_concurrent(self):
+#        
+#        self.__reset()
+#        
+#        setid = 777
+#        elemid = 123
+#        elemid2 = 345
+#        elemid3 = 456
+#        self.obj.add_to_set(setid, elemid)
+#        self.obj.add_to_set(setid, elemid2)
+#        self.obj.add_to_set(setid, elemid3)
+#
+#        setid = 888
+#        elemid = 123
+#        elemid2 = 345
+#        elemid3 = 456
+#        self.obj.add_to_set(setid, elemid)
+#        self.obj.add_to_set(setid, elemid2)
+#        self.obj.add_to_set(setid, elemid3)
+#
+#        t1 = time.time()        
+#        neighbors = self.obj.get_n_neighbors_concurrent(777)
+#        t2 = time.time()
+#        logging.info("get_n_neighbors_concurrent: %f secs" % ( t2-t1 ) )        
+#        
+#        self.assertEqual( neighbors[0][1], 888 )
+        
+
+#    def test_get_n_neighbors_stress(self):
+#        
+#        self.__reset()
+#        
+#        limit = 40
+#        
+#        setid = 777
+#        for elem in range(10000,10000+limit):
+#            t = time.time()            
+#            self.obj.add_to_set(setid, elem)
+#            logging.info("self.obj.add_to_set(setid=%d, elemid=%d) %f" % ( setid, elem, time.time() - t ) )
+#
+#        setid = 888
+#        for elem in range(10000,10000+limit):
+#            t = time.time()            
+#            self.obj.add_to_set(setid, elem)
+#            logging.info("self.obj.add_to_set(setid=%d, elemid=%d) %f" % ( setid, elem, time.time() - t ) )
+#        
+#        t1 = time.time()        
+#        neighbors = self.obj.get_n_neighbors(777)
+#        t2 = time.time()
+#        logging.info("get_n_neighbors: %f secs" % ( t2-t1 ) )        
+#        
+#        self.assertEqual( neighbors, [(1.0,888)] )
+#
+#
+#    def test_get_n_neighbors_concurrent_stress(self):
+#        
+#        self.__reset()
+#        
+#        limit = 10
+#        
+#        setid = 777
+#        for elem in range(10000,10000+limit):
+#            logging.info("self.obj.add_to_set(setid=%d, elemid=%d)" % ( setid, elem ) )
+#            self.obj.add_to_set(setid, elem)
+#
+#        setid = 888
+#        for elem in range(10000,10000+limit):
+#            logging.info("self.obj.add_to_set(setid=%d, elemid=%d)" % ( setid, elem ) )
+#            self.obj.add_to_set(setid, elem)
+#        
+#        t1 = time.time()        
+#        neighbors = self.obj.get_n_neighbors_concurrent(777)
+#        t2 = time.time()
+#        logging.info("get_n_neighbors_concurrent: %f secs" % ( t2-t1 ) )        
+#        
+#        self.assertEqual( neighbors, [(1.0,888)] )
+        
+        
+        
+#
+#
+#    def test_all_users_all_elems(self):
+#        
+#        self.__reset()
+#        
+#        for i in range(25):        
+#            self.obj.add_to_set(i, 0)
+#            if i% 10 == 0:
+#                logging.info( 'adding set %d' % i)
+#        
+#            
+#        for u in self.obj.sets(batch=10):
+#            logging.info( 'sets() %d' % u )
+#
+#        self.assertEqual( len( list(self.obj.sets()) ), 25 )
+#
+#        for i in range(100,125):        
+#            self.obj.add_to_set(0, i)
+#            if i% 10 == 0:
+#                logging.info( 'elem %d' % i)
+#
+#        for u in self.obj.elems(0,batch=10):
+#            logging.info( 'elem %d' % i )
+#            
+#        self.assertEqual( len( list(self.obj.elems(0)) ), 26 )
+#
+#    
+#    def test_bug_elem_not_in_cluster(self):
+#        
+#        if self.train == {}:
+#            self.__build_train_test()
+#        
+#        setid = 1111111111
+#        setid2 =2222222222        
+#        elemid = 123111111111111
+#        elemid2 = 34511111111111
+#        self.obj.add_to_set(setid, elemid)
+#        self.obj.add_to_set(setid, elemid2)
+#        self.obj.add_to_set(setid2, elemid2)
+#        self.obj.add_to_set(setid2, elemid)
+#                            
+#
+#    def test_bug_not_removing_old_cluster(self):
+#        
+#        if self.train == {}:
+#            self.__build_train_test()
+#        
+#        self.__reset()
+#        
+#        setid = 1111111111
+#        elemid = 123111111111111
+#        elemid2 = 34511111111111
+#        self.obj.add_to_set(setid, elemid)
+#        self.obj.add_to_set(setid, elemid2)
+#
+#        self.assertEqual( len(list(db.Query(MinHashSetCluster).filter('q_iteration =', 0).fetch(1000))) , 1 )
+#            
+#
+#    def test_add_to_set_movies(self):
+#        
+#        self.__reset()
+#
+#        limit = 180
+#        c = 0
+#        for l in movie_test.split('\n')[:limit]:
+#            
+#            l_s = l.split()
+#            if len(l_s) == 0:
+#                continue
+#            userid = int(l_s[0])
+#            movieid = int(l_s[1])
+#        
+#            self.obj.add_to_set(userid, movieid)
+#            c += 1
+#            if c % 10 == 0:
+#                logging.info("add_to_user() #%d %s" % (c,time.ctime()))
+#                
+#        sum_diff, count_diff = 0,0
+#        sum_real_diff = 0.0
+#        for u in self.obj.sets():
+#            logging.info("user %d " % (u))
+#            neighs = self.obj.get_n_neighbors(u)
+#            logging.info( str( neighs ))
+#            for sim, n in neighs:
+#                real_sim = self.obj.similarity(u,n)
+#                diff_sim = abs(sim-real_sim)
+#                logging.info( 'aprox sim = %f real sim =%f diff = %f' % (sim, real_sim,  diff_sim ) )
+#                count_diff += 1
+#                sum_diff += diff_sim
+#                sum_real_diff += real_sim        
+#        logging.info( 'RESULT: total estimated similarities -> %f' % (count_diff) )
+#        if count_diff > 0:
+#            ave_error = sum_diff / count_diff
+#            logging.info( 'RESULT: average error of similarity -> %f' % (ave_error) )
+#            logging.info( 'RESULT: average real similarity -> %f' % (sum_real_diff/count_diff) )
+#        
+#        self.assertEqual( self.obj.get_n_neighbors(777), [(2.0/3,888)] )
+#        pass
+#
+#
+#    def __compute_precision_recall(self,recs,test):
+#        recs = set(recs)
+#        test = set(test)
+#        if len(recs) > 0:
+#            precision = len( test.intersection( recs ) ) / len(recs)
+#        else:
+#            precision = -1.0
+#        if len(test) >0:
+#            recall = len( test.intersection( recs ) ) / len(test)
+#        else:
+#            recall = -1.0
+#        return precision,recall
+#
+#    def test_threshold(self):
+#        if self.train == {}:
+#            self.__build_train_test()
+#        
+#        precision_per_threshold = {}
+#        recall_per_threshold = {}
+#        if self.test != {}: 
+#            for u in self.obj.sets():
+#                logging.info("--------")
+#                logging.info("user %d " % (u))
+#                for rec in self.obj.get_recommendations(u):
+#                    logging.info( str( rec ))
+#                for threshold in [i/10.0 for i in range(10)]:
+#                    recs = [elem for w,elem in self.obj.get_recommendations(u,threshold=threshold)]
+#                    test = self.test[u]
+#                    precision,recall = self.__compute_precision_recall(recs,test)
+#                    logging.info("threshold=%f precision=%f recall=%f" % (threshold,precision,recall))
+#                    if not threshold in precision_per_threshold:
+#                        precision_per_threshold[threshold] = []
+#                        recall_per_threshold[threshold] = []
+#                    if precision != -1.0 and recall != -1.0:
+#                        precision_per_threshold[threshold].append( precision )
+#                        recall_per_threshold[threshold].append( recall )                
+#            logging.info("SUMMARY")
+#            for threshold in [i/10.0 for i in range(10)]:
+#                if len(precision_per_threshold)>0 and len(precision_per_threshold[threshold]) > 0:
+#                    ave_precision = sum(precision_per_threshold[threshold]) / len(precision_per_threshold[threshold])
+#                    ave_recall = sum(recall_per_threshold[threshold]) / len(recall_per_threshold[threshold])
+#                    logging.info("threshold=%f ave_precision=%f ave_recall=%f" % (threshold,ave_precision,ave_recall))
+
+
+    def test_nihil(self):
+        pass
+    
+    
+    def test_api(self):
+
+        # Reset
+        urllib2.urlopen('https://datahipsters.appspot.com/reset?admin_secret=DgrvFDGYT75FGYGHfFTfRf874fjhrfgtfgg64467gfthu6ggfvdrv367HdFgFvFrFFT5248HdW64747373fhfh37fh4S')
+        
+        # Client        
+        urllib2.urlopen('https://datahipsters.appspot.com/admin_client?client_id=Jose&recos_left=10000&actions_left=500&action_token=qwerty777&reco_token=qwerty666&admin_secret=DgrvFDGYT75FGYGHfFTfRf874fjhrfgtfgg64467gfthu6ggfvdrv367HdFgFvFrFFT5248HdW64747373fhfh37fh4S&widget_recommended_items=<a href="www.google.com">Ble</a>')
+        
+        # Register actions
+        urllib2.urlopen('http://api.datahipsters.com/register_action?user_id=Tito&item_id=Cujo&client_id=Jose&action_token=qwerty777')
+        urllib2.urlopen('http://api.datahipsters.com/register_action?user_id=Tito&item_id=Biblia&client_id=Jose&action_token=qwerty777')
+        urllib2.urlopen('http://api.datahipsters.com/register_action?user_id=Carlos&item_id=Biblia&client_id=Jose&action_token=qwerty777')
+        urllib2.urlopen('http://api.datahipsters.com/register_action?user_id=Carlos&item_id=Algebra1&client_id=Jose&action_token=qwerty777')
+        
+        # Recos
+        
+        '''
+        <p>
+        {% for result in results %}
+        <div><a href="http://yoururl.com/item/{{result.item_id}}">{{result.item_id}}</a></div>
+        {% endfor %}        
+        </p>
+        '''
+        # Test ALL 6 widgets!!!
+        
+
+if __name__ == '__main__':
+    unittest.main()
+

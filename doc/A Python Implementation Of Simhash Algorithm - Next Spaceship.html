@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<!-- saved from url=(0072)https://liangsun.org/posts/a-python-implementation-of-simhash-algorithm/ -->
+<html class="js video maskImage placeholder" lang="en"><!--<![endif]--><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+  <title>A Python Implementation Of Simhash Algorithm - Next Spaceship</title>
+  <meta name="author" content="Liang Sun">
+
+  
+  <meta name="description" content="Backgroud Recently I’m reading an exellent paper: Detecting Near-Duplicates for Web Crawling, by Gurmeet Singh Manku, Arvind Jain and Anish Das …">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width,minimum-scale=1,maximum-scale=1">
+
+  
+  <link rel="canonical" href="./A Python Implementation Of Simhash Algorithm - Next Spaceship_files/A Python Implementation Of Simhash Algorithm - Next Spaceship.html">
+  <link href="https://liangsun.org/favicon.png" rel="icon">
+
+  <link href="./A Python Implementation Of Simhash Algorithm - Next Spaceship_files/font.css" rel="stylesheet" type="text/css">
+  <link href="./A Python Implementation Of Simhash Algorithm - Next Spaceship_files/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+
+  <script src="./A Python Implementation Of Simhash Algorithm - Next Spaceship_files/cb=gapi.loaded_1" async=""></script><script src="./A Python Implementation Of Simhash Algorithm - Next Spaceship_files/cb=gapi.loaded_0" async=""></script><script type="text/javascript" async="" src="./A Python Implementation Of Simhash Algorithm - Next Spaceship_files/ga.js"></script><script type="text/javascript" async="" src="./A Python Implementation Of Simhash Algorithm - Next Spaceship_files/plusone.js" gapi_processed="true"></script><script src="./A Python Implementation Of Simhash Algorithm - Next Spaceship_files/MathJax.js"></script>
+
+  <script src="./A Python Implementation Of Simhash Algorithm - Next Spaceship_files/modernizr-2.0.js"></script>
+  <script src="./A Python Implementation Of Simhash Algorithm - Next Spaceship_files/ender.js"></script>
+  <script src="./A Python Implementation Of Simhash Algorithm - Next Spaceship_files/octopress.js" type="text/javascript"></script>
+  <link href="https://liangsun.org/atom.xml" rel="alternate" title="Next Spaceship" type="application/atom+xml">
+  
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-34173187-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {setTimeout(function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      }, 500);})();
+  </script>
+
+
+<script type="text/javascript" async="" src="./A Python Implementation Of Simhash Algorithm - Next Spaceship_files/embed.js"></script><style type="text/css">.MathJax_Preview {color: #888}
+#MathJax_Message {position: fixed; left: 1em; bottom: 1.5em; background-color: #E6E6E6; border: 1px solid #959595; margin: 0px; padding: 2px 8px; z-index: 102; color: black; font-size: 80%; width: auto; white-space: nowrap}
+#MathJax_MSIE_Frame {position: absolute; top: 0; left: 0; width: 0px; z-index: 101; border: 0px; margin: 0px; padding: 0px}
+.MathJax_Error {color: #CC0000; font-style: italic}
+</style><style type="text/css">#MathJax_Zoom {position: absolute; background-color: #F0F0F0; overflow: auto; display: block; z-index: 301; padding: .5em; border: 1px solid black; margin: 0; font-weight: normal; font-style: normal; text-align: left; text-indent: 0; text-transform: none; line-height: normal; letter-spacing: normal; word-spacing: normal; word-wrap: normal; white-space: nowrap; float: none; box-shadow: 5px 5px 15px #AAAAAA; -webkit-box-shadow: 5px 5px 15px #AAAAAA; -moz-box-shadow: 5px 5px 15px #AAAAAA; -khtml-box-shadow: 5px 5px 15px #AAAAAA; filter: progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color='gray', Positive='true')}
+#MathJax_ZoomOverlay {position: absolute; left: 0; top: 0; z-index: 300; display: inline-block; width: 100%; height: 100%; border: 0; padding: 0; margin: 0; background-color: white; opacity: 0; filter: alpha(opacity=0)}
+#MathJax_ZoomFrame {position: relative; display: inline-block; height: 0; width: 0}
+#MathJax_ZoomEventTrap {position: absolute; left: 0; top: 0; z-index: 302; display: inline-block; border: 0; padding: 0; margin: 0; background-color: white; opacity: 0; filter: alpha(opacity=0)}
+</style><style type="text/css">.MathJax_Hover_Frame {border-radius: .25em; -webkit-border-radius: .25em; -moz-border-radius: .25em; -khtml-border-radius: .25em; box-shadow: 0px 0px 15px #83A; -webkit-box-shadow: 0px 0px 15px #83A; -moz-box-shadow: 0px 0px 15px #83A; -khtml-box-shadow: 0px 0px 15px #83A; border: 1px solid #A6D ! important; display: inline-block; position: absolute}
+.MathJax_Hover_Arrow {position: absolute; width: 15px; height: 11px; cursor: pointer}
+</style><style type="text/css">#MathJax_About {position: fixed; left: 50%; width: auto; text-align: center; border: 3px outset; padding: 1em 2em; background-color: #DDDDDD; color: black; cursor: default; font-family: message-box; font-size: 120%; font-style: normal; text-indent: 0; text-transform: none; line-height: normal; letter-spacing: normal; word-spacing: normal; word-wrap: normal; white-space: nowrap; float: none; z-index: 201; border-radius: 15px; -webkit-border-radius: 15px; -moz-border-radius: 15px; -khtml-border-radius: 15px; box-shadow: 0px 10px 20px #808080; -webkit-box-shadow: 0px 10px 20px #808080; -moz-box-shadow: 0px 10px 20px #808080; -khtml-box-shadow: 0px 10px 20px #808080; filter: progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color='gray', Positive='true')}
+.MathJax_Menu {position: absolute; background-color: white; color: black; width: auto; padding: 5px 0px; border: 1px solid #CCCCCC; margin: 0; cursor: default; font: menu; text-align: left; text-indent: 0; text-transform: none; line-height: normal; letter-spacing: normal; word-spacing: normal; word-wrap: normal; white-space: nowrap; float: none; z-index: 201; border-radius: 5px; -webkit-border-radius: 5px; -moz-border-radius: 5px; -khtml-border-radius: 5px; box-shadow: 0px 10px 20px #808080; -webkit-box-shadow: 0px 10px 20px #808080; -moz-box-shadow: 0px 10px 20px #808080; -khtml-box-shadow: 0px 10px 20px #808080; filter: progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color='gray', Positive='true')}
+.MathJax_MenuItem {padding: 1px 2em; background: transparent}
+.MathJax_MenuArrow {position: absolute; right: .5em; color: #666666}
+.MathJax_MenuActive .MathJax_MenuArrow {color: white}
+.MathJax_MenuCheck {position: absolute; left: .7em}
+.MathJax_MenuRadioCheck {position: absolute; left: .7em}
+.MathJax_MenuLabel {padding: 1px 2em 3px 1.33em; font-style: italic}
+.MathJax_MenuRule {border-top: 1px solid #DDDDDD; margin: 4px 3px}
+.MathJax_MenuDisabled {color: GrayText}
+.MathJax_MenuActive {background-color: #606872; color: white}
+.MathJax_Menu_Close {position: absolute; width: 31px; height: 31px; top: -15px; left: -15px}
+</style></head>
+
+<body cz-shortcut-listen="true"><div id="MathJax_Message" style="display: none;"></div>
+  <header role="banner"><hgroup>
+  <h1><a href="https://liangsun.org/">Next Spaceship</a></h1>
+  
+    <h2>Driving into future...</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="https://liangsun.org/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="https://www.google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:liangsun.org">
+    <input class="search" type="text" name="q" results="0" placeholder="Search">
+  </fieldset><fieldset class="mobile-nav"><select><option value="">Navigate…</option><option value="https://liangsun.org/">» Blog</option><option value="https://liangsun.org/archives/">» Archives</option><option value="https://liangsun.org/portfolio/">» Portfolio</option><option value="https://liangsun.org/treasure-box/">» Treasure Box</option><option value="https://liangsun.org/about/">» About</option><option value="https://liangsun.org/atom.xml">» RSS</option></select></fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="https://liangsun.org/">Blog</a></li>
+  <li><a href="https://liangsun.org/archives/">Archives</a></li>
+  <li><a href="https://liangsun.org/portfolio/">Portfolio</a></li>
+  <li><a href="https://liangsun.org/treasure-box/">Treasure Box</a></li>
+  <li><a href="https://liangsun.org/about/">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">A Python Implementation of Simhash Algorithm</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-09-15T00:10:00+08:00" pubdate="" data-updated="true">Sep 15<span>th</span>, 2013</time>
+        
+         | <a href="https://liangsun.org/posts/a-python-implementation-of-simhash-algorithm/#disqus_thread">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><h2>Backgroud</h2>
+
+<p>Recently I’m reading an exellent paper: <a href="http://www.wwwconference.org/www2007/papers/paper215.pdf">Detecting Near-Duplicates for Web Crawling</a>, by Gurmeet Singh Manku, Arvind Jain and Anish Das Sarma.</p>
+
+<p>The interesting of simhash algorithm is its two properties:</p>
+
+<blockquote><p>Properties of simhash: Note that simhash possesses two conicting properties: (A) The fingerprint of a document is a “hash” of its features, and (B) Similar documents have similar hash values.</p></blockquote>
+
+
+<p>Maybe it’s because of the beauty of the algorithm, I find myself implementing it. <a href="https://github.com/liangsun/simhash">https://github.com/liangsun/simhash</a></p>
+
+<!-- more -->
+
+
+<h2>Getting Started</h2>
+
+<figure class="code"><div class="highlight"><table><tbody><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">pip install simhash
+</span><span class="line">(or: easy_install simhash)</span></code></pre></td></tr></tbody></table></div></figure>
+
+
+<p>View simhash value:</p>
+
+<figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tbody><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">from</span> <span class="nn">simhash</span> <span class="kn">import</span> <span class="n">Simhash</span>
+</span><span class="line"><span class="k">print</span> <span class="s">'</span><span class="si">%x</span><span class="s">'</span> <span class="o">%</span> <span class="n">Simhash</span><span class="p">(</span><span class="s">'How are you? I am fine. Thanks.'</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+</span><span class="line"><span class="k">print</span> <span class="s">'</span><span class="si">%x</span><span class="s">'</span> <span class="o">%</span> <span class="n">Simhash</span><span class="p">(</span><span class="s">'How are u? I am fine.     Thanks.'</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+</span><span class="line"><span class="k">print</span> <span class="s">'</span><span class="si">%x</span><span class="s">'</span> <span class="o">%</span> <span class="n">Simhash</span><span class="p">(</span><span class="s">'How r you?I    am fine. Thanks.'</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+</span></code></pre></td></tr></tbody></table></div></figure>
+
+
+<p>Get distance of two simhash:</p>
+
+<figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tbody><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">from</span> <span class="nn">simhash</span> <span class="kn">import</span> <span class="n">Simhash</span>
+</span><span class="line"><span class="k">print</span> <span class="n">Simhash</span><span class="p">(</span><span class="s">'aa'</span><span class="p">)</span><span class="o">.</span><span class="n">distance</span><span class="p">(</span><span class="n">Simhash</span><span class="p">(</span><span class="s">'bb'</span><span class="p">))</span>
+</span><span class="line"><span class="k">print</span> <span class="n">Simhash</span><span class="p">(</span><span class="s">'aa'</span><span class="p">)</span><span class="o">.</span><span class="n">distance</span><span class="p">(</span><span class="n">Simhash</span><span class="p">(</span><span class="s">'aa'</span><span class="p">))</span>
+</span></code></pre></td></tr></tbody></table></div></figure>
+
+
+<h2>Use the Simhash Index</h2>
+
+<p>Use the SimhashIndex to query near duplicates objects in a very efficient way.</p>
+
+<figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tbody><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+<span class="line-number">13</span>
+<span class="line-number">14</span>
+<span class="line-number">15</span>
+<span class="line-number">16</span>
+</pre></td><td class="code"><pre><code class="python"><span class="line"><span class="kn">from</span> <span class="nn">simhash</span> <span class="kn">import</span> <span class="n">Simhash</span><span class="p">,</span> <span class="n">SimhashIndex</span>
+</span><span class="line"><span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class="line">    <span class="mi">1</span><span class="p">:</span> <span class="s">u'How are you? I Am fine. blar blar blar blar blar Thanks.'</span><span class="p">,</span>
+</span><span class="line">    <span class="mi">2</span><span class="p">:</span> <span class="s">u'How are you i am fine. blar blar blar blar blar than'</span><span class="p">,</span>
+</span><span class="line">    <span class="mi">3</span><span class="p">:</span> <span class="s">u'This is simhash test.'</span><span class="p">,</span>
+</span><span class="line"><span class="p">}</span>
+</span><span class="line"><span class="n">objs</span> <span class="o">=</span> <span class="p">[(</span><span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">),</span> <span class="n">Simhash</span><span class="p">(</span><span class="n">v</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span>
+</span><span class="line"><span class="n">index</span> <span class="o">=</span> <span class="n">SimhashIndex</span><span class="p">(</span><span class="n">objs</span><span class="p">)</span>
+</span><span class="line">
+</span><span class="line"><span class="k">print</span> <span class="n">index</span><span class="o">.</span><span class="n">bucket_size</span><span class="p">()</span>
+</span><span class="line">
+</span><span class="line"><span class="n">s1</span> <span class="o">=</span> <span class="n">Simhash</span><span class="p">(</span><span class="s">u'How are you i am fine. blar blar blar blar blar thank'</span><span class="p">)</span>
+</span><span class="line"><span class="k">print</span> <span class="n">index</span><span class="o">.</span><span class="n">get_near_dups</span><span class="p">(</span><span class="n">s1</span><span class="p">)</span>
+</span><span class="line">
+</span><span class="line"><span class="n">index</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">'4'</span><span class="p">,</span> <span class="n">s1</span><span class="p">)</span>
+</span><span class="line"><span class="k">print</span> <span class="n">index</span><span class="o">.</span><span class="n">get_near_dups</span><span class="p">(</span><span class="n">s1</span><span class="p">)</span>
+</span></code></pre></td></tr></tbody></table></div></figure>
+
+
+<h2>Source Code</h2>
+
+<p>View <a href="https://github.com/liangsun/simhash">Source Code</a> at GitHub.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Liang Sun</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-09-15T00:10:00+08:00" pubdate="" data-updated="true">Sep 15<span>th</span>, 2013</time>
+      
+
+<span class="categories">
+  
+    <a class="category" href="https://liangsun.org/topics/algorithm/">Algorithm</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="https://liangsun.org/posts/a-python-implementation-of-simhash-algorithm/" data-via="" data-counturl="https://liangsun.org/posts/a-python-implementation-of-simhash-algorithm/">Tweet</a>
+  
+  
+  <div id="___plusone_0" style="text-indent: 0px; margin: 0px; padding: 0px; background-color: transparent; border-style: none; float: none; line-height: normal; font-size: 1px; vertical-align: baseline; display: inline-block; width: 90px; height: 20px; background-position: initial initial; background-repeat: initial initial;"><iframe frameborder="0" hspace="0" marginheight="0" marginwidth="0" scrolling="no" style="position: static; top: 0px; width: 90px; margin: 0px; border-style: none; left: 0px; visibility: visible; height: 20px;" tabindex="0" vspace="0" width="100%" id="I0_1401390462191" name="I0_1401390462191" src="./A Python Implementation Of Simhash Algorithm - Next Spaceship_files/fastbutton.html" data-gapiattached="true" title="+1"></iframe></div>
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="https://liangsun.org/posts/snipet-to-insert-html-at-caret/" title="Previous Post: Snipet to Insert HTML at Caret">« Snipet to Insert HTML at Caret</a>
+      
+      
+        <a class="basic-alignment right" href="https://liangsun.org/posts/converting-text-files-from-one-operating-system-to-another-in-python/" title="Next Post: Converting Text Files From One Operating System to Another in Python">Converting Text Files From One Operating System to Another in Python »</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><iframe id="dsq-2" data-disqus-uid="2" allowtransparency="true" frameborder="0" tabindex="0" title="Disqus" width="100%" src="./A Python Implementation Of Simhash Algorithm - Next Spaceship_files/saved_resource.html" scrolling="no" horizontalscrolling="no" verticalscrolling="no" style="width: 100% !important; border: none !important; overflow: hidden !important; height: 2929px !important;"></iframe></div>
+  </section>
+
+</div>
+
+<aside class="sidebar thirds">
+  
+    <section class="first odd">
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="https://liangsun.org/posts/write-latex-with-octopress-mathjax/">Write LaTeX With Octopress &amp; MathJax</a>
+      </li>
+    
+      <li class="post">
+        <a href="https://liangsun.org/posts/wolfram-language-is-close-to-release/">Wolfram Language Is Close To Release</a>
+      </li>
+    
+      <li class="post">
+        <a href="https://liangsun.org/posts/encrpyt-login-password-with-rsa/">Encrpyt Login Password With RSA</a>
+      </li>
+    
+      <li class="post">
+        <a href="https://liangsun.org/posts/shire/">Shire - A Framework Based On Tornado Web &amp; MongoDB</a>
+      </li>
+    
+      <li class="post">
+        <a href="https://liangsun.org/posts/my-certificate-for-digital-analytics-fundamentals/">My Certificate for Digital Analytics Fundamentals</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+<section class="even">
+<h1>Sites</h1>
+<ul>
+    <li><a href="http://zhufangzhi.com/">ZhuFangZhi - House Renting Search Engine</a></li>
+    <li><a href="http://smalloj.com/">Small OJ - Online Judge System</a></li>
+    <li><a href="http://www.beautoday.com/">Beautoday - Online Shoes Shopping</a></li>
+    <li><a href="http://aivsai.sinaapp.com/">AI vs AI - Online AI PK System</a></li>
+</ul>
+</section>
+<section class="odd">
+<h1>Blogroll</h1>
+<ul>
+    <li><a href="http://wilburding.github.com/">Wilbur Ding's Blog (Chinese)</a></li>
+    <li><a href="http://joshlamar.com/">Music blog of Josh LaMar</a></li>
+    <li><a href="http://www.tanghongxiu.com/">Tang's Blog (Chinese)</a></li>
+    <li><a href="http://www.zhizhihu.com/">丕子</a></li>
+    <li><a href="http://qingfeng.github.com/">清风のBlog</a></li>
+    <li><a href="http://cnborn.net/">CNBorn--Dharma's truth (Chinese)</a></li>
+    <li><a href="http://www.neugls.info/">Neugls Work Studio</a></li>
+    <li><a href="http://liluo.org/">落</a></li>
+    <li><a href="http://zhangchi.de/">把日子写成歌</a></li>
+    <li><a href="http://bevin.co.nr/">Bevin's Blog</a></li>
+    <li><a href="http://yongyule.com/">永遇乐</a></li>
+
+</ul>
+</section>
+<section class="first even">
+  <h1>Tag Cloud</h1>
+    <span id="tag-cloud"><a href="https://liangsun.org/topics/algorithm" style="font-size: 120.0%">Algorithm(6)</a> <a href="https://liangsun.org/topics/c" style="font-size: 110.0%">C(3)</a> <a href="https://liangsun.org/topics/cpp" style="font-size: 113.33333333333333%">CPP(4)</a> <a href="https://liangsun.org/topics/css" style="font-size: 106.66666666666667%">CSS(2)</a> <a href="https://liangsun.org/topics/database" style="font-size: 103.33333333333333%">Database(1)</a> <a href="https://liangsun.org/topics/education" style="font-size: 103.33333333333333%">Education(1)</a> <a href="https://liangsun.org/topics/frontend" style="font-size: 113.33333333333333%">Frontend(4)</a> <a href="https://liangsun.org/topics/graphics" style="font-size: 106.66666666666667%">Graphics(2)</a> <a href="https://liangsun.org/topics/hg" style="font-size: 103.33333333333333%">Hg(1)</a> <a href="https://liangsun.org/topics/imac" style="font-size: 110.0%">iMac(3)</a> <a href="https://liangsun.org/topics/javascript" style="font-size: 110.0%">Javascript(3)</a> <a href="https://liangsun.org/topics/javascript" style="font-size: 103.33333333333333%">javascript(1)</a> <a href="https://liangsun.org/topics/life" style="font-size: 113.33333333333333%">Life(4)</a> <a href="https://liangsun.org/topics/linux" style="font-size: 133.33333333333334%">Linux(10)</a> <a href="https://liangsun.org/topics/literature" style="font-size: 103.33333333333333%">Literature(1)</a> <a href="https://liangsun.org/topics/math" style="font-size: 103.33333333333333%">Math(1)</a> <a href="https://liangsun.org/topics/maths" style="font-size: 106.66666666666667%">Maths(2)</a> <a href="https://liangsun.org/topics/network" style="font-size: 106.66666666666667%">Network(2)</a> <a href="https://liangsun.org/topics/news" style="font-size: 103.33333333333333%">News(1)</a> <a href="https://liangsun.org/topics/problems" style="font-size: 136.66666666666666%">Problems(11)</a> <a href="https://liangsun.org/topics/python" style="font-size: 140.0%">Python(12)</a> <a href="https://liangsun.org/topics/resolve" style="font-size: 103.33333333333333%">Resolve(1)</a> <a href="https://liangsun.org/topics/script" style="font-size: 103.33333333333333%">Script(1)</a> <a href="https://liangsun.org/topics/security" style="font-size: 113.33333333333333%">Security(4)</a> <a href="https://liangsun.org/topics/server" style="font-size: 106.66666666666667%">Server(2)</a> <a href="https://liangsun.org/topics/skills" style="font-size: 113.33333333333333%">Skills(4)</a> <a href="https://liangsun.org/topics/software" style="font-size: 103.33333333333333%">Software(1)</a> <a href="https://liangsun.org/topics/study" style="font-size: 103.33333333333333%">Study(1)</a> <a href="https://liangsun.org/topics/tools" style="font-size: 106.66666666666667%">Tools(2)</a> <a href="https://liangsun.org/topics/vim" style="font-size: 106.66666666666667%">Vim(2)</a> <a href="https://liangsun.org/topics/web" style="font-size: 160.0%">Web(18)</a> <a href="https://liangsun.org/topics/windows" style="font-size: 106.66666666666667%">Windows(2)</a> </span>
+</section>
+
+<section class="googleplus odd">
+  <h1>
+    <a href="https://plus.google.com/110382236002934621103?rel=author">
+      <img src="./A Python Implementation Of Simhash Algorithm - Next Spaceship_files/gprofile_button-32.png" width="32" height="32">
+      Google+
+    </a>
+  </h1>
+</section>
+
+
+
+  
+</aside>
+
+
+    <span class="toggle-sidebar"></span></div>
+  </div>
+  <footer role="contentinfo"><p>
+Copyright © 2009-2013 | Liang Sun |
+<span class="credit">
+    Powered by: <a href="http://octopress.org/">Octopress</a>, <a href="http://nginx.org/">nginx</a>, <a href="https://bitbucket.org/">Bitbucket</a> |
+</span>
+Hosted on <a href="http://aws.amazon.com/">Amazon's EC2</a> and <a href="http://www.linode.com/?r=b522a746e7e23272f26dda24f7f4557dcc803236">Linode</a>.
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'liangsun';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'https://liangsun.org/posts/a-python-implementation-of-simhash-algorithm/';
+        var disqus_url = 'https://liangsun.org/posts/a-python-implementation-of-simhash-algorithm/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'https://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      //var twitterWidgets = document.createElement('script');
+      //twitterWidgets.type = 'text/javascript';
+      //twitterWidgets.async = true;
+      //twitterWidgets.src = 'https://platform.twitter.com/widgets.js';
+      //document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+  
+
+
+<iframe name="oauth2relay768601244" id="oauth2relay768601244" src="./A Python Implementation Of Simhash Algorithm - Next Spaceship_files/postmessageRelay.html" tabindex="-1" style="width: 1px; height: 1px; position: absolute; top: -100px;"></iframe></body></html>

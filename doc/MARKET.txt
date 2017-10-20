@@ -1,0 +1,23 @@
+
+NEAR DUPLICATES API
+
+Near Duplicates API
+http://www.discovertext.com/
+http://www.equivio.com/press_item.php?ID=43
+
+Pricing
+https://app.discovertext.com/Home/PricingSignup
+http://recommender.strands.com/pricing/
+
+Streaming machine learning
+https://bigml.com/
+https://www.quantopian.com/posts/machine-learning-from-streaming-data
+https://www.quantopian.com/
+http://strata.oreilly.com/2013/10/stream-mining-essentials.html
+http://strata.oreilly.com/2013/09/stream-processing-and-mining-just-got-more-interesting.html
+
+The startup has a freemium business model so developers can get started for free to power up to 500 recommendations, or pay $29 per month for 5,000 recommendations or $199 for 50,000, with variable rates for overage costs. It also has an enterprise package with custom pricing available.
+http://www.betakit.com/spent-launches-relify-a-recommendations-as-a-service-api-for-developers/
+
+Kiji Real-time recommendations
+http://www.infoq.com/articles/kiji

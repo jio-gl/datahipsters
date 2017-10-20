@@ -1,0 +1,83 @@
+
+------------
+----PLAN----
+------------
+
+V0.1
+
+MODEL
+
+22 - Dejara para el final, pero meter un catch con pagina linda para errores para que vean los usuarios.
+
+21 - que los usuarios free tengan una cota fija de N adds y M recomendaciones y listo, sin renovar por mes, para evitar abusos mensuales.
+
+19 - Hacer uno model escalable a cientos de miles de pares (setid,elemid) usando SQLite.
+
+11 - Meter los q clusters en una sola tabla tipo multiset para que cuando se pidan recomendaciones haya uqe hacer un solo query.
+
+18 - Hacer RestAPI y metodo remove_from_set(setid,elemid) http://stackoverflow.com/questions/19375085/rest-api-in-google-app-engine-python
+
+10 - Meter client_id y database_id en el model para que cada cliente tenga su id y pueda crear databases diarias por ejemplo.
+
+18 - Usar locks para configuraciones de usuarios, request count, etc.
+
+
+
+WEB
+ 
+7 - Hacer base.html de la web. Font, logo, colores hipsters.
+
+8 - Diseñar estructura de páginas: home, registration, pricing, user-home, user-widget-template.
+
+9 - Pedir dominio y mails (o google apps? @heapsters.com) y setupear www.datahipsters.com y api.datahipsters.com dos subdominios para mayor estabilidad.
+
+DONE
+
+17 - .put() ES ASYNC!!! usar put_async() y sincronizar los objetos que devuelve con .result() ver put_async()
+	No es async en sí, lo que es async las es la "eventual" convergencia/disponibilidad de los datos en el datastore.
+ 
+16 - Subir al appengine y medir latencies. 
+
+
+ 
+
+v0.2
+ 
+
+MODEL
+
+15 - Meter varios p (1,2,3,4) en la tabla para que se pueda configurar el p de forma online.
+
+5 - Concurrency: https://pypi.python.org/pypi/futures
+	latency: http://code.google.com/status/appengine/detail/datastore/2014/06/17#ae-trust-detail-datastore-delete-latency
+	http://appenginedevelopment.blogspot.com.ar/2011/10/multi-threaded-python-27-wtfaq.html
+
+14 - Ver si se puede quitar MinHashSetCluster y usar SetMinHash en vez con un indice inverso sobre el minhash.
+
+13 - Testear el modelo con 200k movie watches (rated with five stars).
+
+12 - Meter un template jinja2 para que el cliente pueda directamente pedir un html a la api.
+
+2 - Meter MemCache para acelerar sin perder mucho real-time https://developers.google.com/appengine/docs/python/memcache/
+ 
+3 - Evaluar la teoria y la implementacion de Minhash para multisets/bags, consultar a Dave mathematician.
+ 
+4 - Feature: Random recommendations versus Best recommendations.
+ 
+6 - Hacer bootstraps genericos para peliculas (encodeando con IMDB code), libros (isbn) y más cosas.
+
+20 - Hacer que para DBs grandes (por ejemplo >1M eventos solo se use p=2, p=1 no se usaría mas por el tamaño de los clusters ahora ~1M para los clusters grandes)
+
+------
+-DONE-
+------
+
+ 1 - Probar que los movie ratings se mapeen como :
+ 	1 -> no figura
+ 	2 -> no figura
+ 	3 -> una vez aparece el item
+ 	4 -> aparece 2 veces el item.
+ 	5 -> aparece 3 veces el item.
+ 	
+ 
+ 

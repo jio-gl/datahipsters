@@ -1,0 +1,6 @@
+
+https://github.com/paypal/rest-api-sdk-python
+http://www.redmintlabs.com/
+
+LEGAL: averiguar cual es el limite de pagos que puedo recibir por PayPal
+a mi tarjeta de crédito y luego a mi cuenta en BBVA.
