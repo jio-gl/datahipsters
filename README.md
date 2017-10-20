@@ -1,2 +1,2 @@
-# datahipsters
-DataHipsters is a service running MinHash over Google AppEngine, including and API for k-neighbors used on Online Recommender Sytems.
+B# datahipsters
+DataHipsters is a service implementing MinHash similarity over Google AppEngine, including an API for k-neighbors used in Online Recommender Sytems.
